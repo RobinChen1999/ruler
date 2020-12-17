@@ -126,12 +126,15 @@ EditorBuildSettings:
     path: Assets/PowerDiagram/Scenes/powerDiagramControls.unity
     guid: 7fad435c9af20854082db4be1e7ae665
   - enabled: 1
-    path: Assets/PowerDiagram/Scenes/powerDiagramGame.unity
+    path: Assets/PowerDiagram/Scenes/powerDiagramGame_2.unity
     guid: 377785230a4aa654ebc16c40a9aa910b
   - enabled: 1
-    path: Assets/PowerDiagram/Scenes/powerDiagramRedVictory.unity
-    guid: eed28c2ebd1c8db4d9e03f4a0b324a21
-  - enabled: 1
-    path: Assets/PowerDiagram/Scenes/powerDiagramBlueVictory.unity
-    guid: 5837e001f0988e641a83d7aaef917a9a
+    path: Assets/PowerDiagram/Scenes/powerDiagramGame.unity
+    guid: 59b44e7f6b8e0f348914f70891f1ac2b
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
   m_configObjects: {}

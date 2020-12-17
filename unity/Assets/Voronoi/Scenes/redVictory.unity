@@ -730,7 +730,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1725183748}
   m_Layer: 0
-  m_Name: PowerDiagramSubMenu
+  m_Name: VoronoiSubMenu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
