@@ -47,8 +47,17 @@
         // calculated after every turn
         private DCEL m_DCEL;
 
+        // Created stuff
+        class DictionaryPair {
+            public EOwnership Ownership;
+            public double Radius;
+        }
+
+        private Dictionary<Vector2, GameObject> gameObjectList = new Dictionary<Vector2, GameObject>();
+
+
         // mapping of vertices to ownership enum
-        private readonly Dictionary<Vector2, EOwnership> m_ownership = new Dictionary<Vector2, EOwnership>();
+        private readonly Dictionary<Vector2, DictionaryPair> m_ownership = new Dictionary<Vector2, DictionaryPair>();
 
         private enum EOwnership
         {
@@ -66,7 +75,7 @@
             // add auxiliary vertices as unowned
             foreach (var vertex in m_delaunay.Vertices)
             {
-                m_ownership.Add(vertex, EOwnership.UNOWNED);
+                m_ownership.Add(vertex, new DictionaryPair { Ownership = EOwnership.UNOWNED, Radius = 1 });
             }
 
             m_fishManager = new FishManager();
@@ -166,10 +175,10 @@
             foreach (var inputNode in m_delaunay.Vertices)
             {
                 // dont draw anything for unowned vertices
-                if (m_ownership[inputNode] == EOwnership.UNOWNED) continue;
+                if (m_ownership[inputNode].Ownership == EOwnership.UNOWNED) continue;
 
                 // get ownership of node
-                var playerIndex = m_ownership[inputNode] == EOwnership.PLAYER1 ? 0 : 1;
+                var playerIndex = m_ownership[inputNode].Ownership == EOwnership.PLAYER1 ? 0 : 1;
 
                 var face = m_DCEL.GetContainingFace(inputNode);
 
@@ -223,10 +232,10 @@
                 // get dcel face containing input node
                 var face = m_DCEL.GetContainingFace(inputNode);
 
-                if (m_ownership[inputNode] != EOwnership.UNOWNED)
+                if (m_ownership[inputNode].Ownership != EOwnership.UNOWNED)
                 {
                     // update player area with face that intersects with window
-                    var playerIndex = m_ownership[inputNode] == EOwnership.PLAYER1 ? 0 : 1;
+                    var playerIndex = m_ownership[inputNode].Ownership == EOwnership.PLAYER1 ? 0 : 1;
                     m_playerArea[playerIndex] += Intersector.IntersectConvex(m_meshRect, face.Polygon.Outside).Area;
                 }
             }
@@ -247,32 +256,64 @@
             }
 
             // load victory if screen clicked after every player has taken turn
-            if (m_halfTurnsTaken >= 2 * m_turns)
-            {
-                if (m_playerArea[0] > m_playerArea[1])
-                {
+            if (m_halfTurnsTaken >= 2 * m_turns) {
+                if (m_playerArea[0] > m_playerArea[1]) {
                     SceneManager.LoadScene(m_p1Victory);
-                }
-                else
-                {
+                } else {
                     SceneManager.LoadScene(m_p2Victory);
                 }
-            }
-            else
-            {
+            } else {
                 // obtain mouse position vector
                 var pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 pos.y = 0;
                 var me = new Vector2(pos.x, pos.z);
 
+                EOwnership ownership = player1Turn ? EOwnership.PLAYER1 : EOwnership.PLAYER2;
+
+                List<KeyValuePair<Vector2, DictionaryPair>> list = new List<KeyValuePair<Vector2, DictionaryPair>>();
+
                 // check if vertex already in graph to avoid degenerate cases
-                if (m_ownership.ToList().Exists(v => MathUtil.EqualsEps(v.Key, me)))
-                {
+                foreach (KeyValuePair<Vector2, DictionaryPair> vertex in m_ownership) {
+                    // Check if selected point lies on existing vertex and see to which team it belongs
+                    Debug.Log("Comparing to a circle with radius " + vertex.Value.Radius);
+                    Debug.Log("Distance " + Vector2.Distance(vertex.Key, me));
+                    if (Vector2.Distance(vertex.Key, me) < vertex.Value.Radius) {
+                        if (ownership == vertex.Value.Ownership) {
+                            list.Add(vertex);
+                        } else {
+                            return;
+                        }
+                    }
+                }
+
+                // If there exists only one vertex that's applicable
+                if (list.Count == 1) {
+                    if (list[0].Value.Radius < 5) {
+                        Debug.Log("Increase size of vertex");
+
+                        // Increase size
+                        GameObject gameObject = gameObjectList[list[0].Key];
+
+                        float size = (float) list[0].Value.Radius * 2;
+
+                        gameObject.transform.localScale += new Vector3(size, size, size);
+
+                        m_ownership[list[0].Key] = new DictionaryPair { Ownership = list[0].Value.Ownership, Radius = list[0].Value.Radius + 1 };
+
+                        return;
+                    } else {
+                        Debug.Log("Size too big!");
+                        return;
+                    }
+                } else if (list.Count > 1) {
+                    Debug.Log("Point lies in multiple circles");
                     return;
                 }
 
+                Debug.Log("Create new circle");
+
                 // store owner of vertex
-                m_ownership.Add(me, player1Turn ? EOwnership.PLAYER1 : EOwnership.PLAYER2);
+                m_ownership.Add(me, new DictionaryPair { Ownership = ownership, Radius = 0.5});
 
                 Delaunay.AddVertex(m_delaunay, me);
 
@@ -285,11 +326,13 @@
                     throw new InvalidProgramException("Couldn't instantiate m_PlayerPrefab!");
                 }
 
+                gameObjectList.Add(me, onClickObject);
+
                 // set parent to this game object for better nesting
                 onClickObject.transform.parent = gameObject.transform;
 
                 // add object to the fish manager
-                m_fishManager.AddFish(onClickObject.transform, player1Turn, m_withLookAtOnPlacement);
+                // m_fishManager.AddFish(onClickObject.transform, player1Turn, m_withLookAtOnPlacement);
 
                 UpdateVoronoi();
 
