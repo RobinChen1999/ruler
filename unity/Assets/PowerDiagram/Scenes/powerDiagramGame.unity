@@ -366,7 +366,7 @@ MonoBehaviour:
   m_Player2Prefab: {fileID: 1000013133559478, guid: 19240c6cec0421d4a8ada772ca6e7b50,
     type: 3}
   m_withLookAtOnPlacement: 1
-  m_turns: 5
+  m_turns: 15
   m_p1Victory: blueVictory
   m_p2Victory: redVictory
   m_GUIManager: {fileID: 1373892434396973}

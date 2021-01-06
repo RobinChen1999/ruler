@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using UnityEngine;
     using UnityEngine.SceneManagement;
     using Util.Algorithms.DCEL;
@@ -11,7 +10,6 @@
     using Util.Geometry.DCEL;
     using Util.Geometry.Polygon;
     using Util.Geometry.Triangulation;
-    using Util.Math;
 
     /// <summary>
     /// Game controller for the voronoi game.
@@ -40,7 +38,7 @@
         private float[] m_playerArea;
 
         private Triangulation m_delaunay;
-        private FishManager m_fishManager;
+        //private FishManager m_fishManager;
         private Polygon2D m_meshRect;
 
         // voronoi dcel
@@ -78,7 +76,7 @@
                 m_ownership.Add(vertex, new DictionaryPair { Ownership = EOwnership.UNOWNED, Radius = 1 });
             }
 
-            m_fishManager = new FishManager();
+            //m_fishManager = new FishManager();
 
             // create polygon of rectangle window for intersection with voronoi
             float z = Vector2.Distance(m_meshFilter.transform.position, Camera.main.transform.position);
@@ -275,9 +273,8 @@
                 // check if vertex already in graph to avoid degenerate cases
                 foreach (KeyValuePair<Vector2, DictionaryPair> vertex in m_ownership) {
                     // Check if selected point lies on existing vertex and see to which team it belongs
-                    Debug.Log("Comparing to a circle with radius " + vertex.Value.Radius);
-                    Debug.Log("Distance " + Vector2.Distance(vertex.Key, me));
-                    if (Vector2.Distance(vertex.Key, me) < vertex.Value.Radius) {
+                    // Note: Radius * 0.5 since circle sprite has a radius of 0.5 initially
+                    if (Vector2.Distance(vertex.Key, me) < vertex.Value.Radius * 0.5) {
                         if (ownership == vertex.Value.Ownership) {
                             list.Add(vertex);
                         } else {
@@ -296,11 +293,9 @@
 
                         float size = (float) list[0].Value.Radius * 2;
 
-                        gameObject.transform.localScale += new Vector3(size, size, size);
+                        gameObject.transform.localScale = new Vector3(size, 0, size);
 
-                        m_ownership[list[0].Key] = new DictionaryPair { Ownership = list[0].Value.Ownership, Radius = list[0].Value.Radius + 1 };
-
-                        return;
+                        m_ownership[list[0].Key] = new DictionaryPair { Ownership = list[0].Value.Ownership, Radius = list[0].Value.Radius * 2 };
                     } else {
                         Debug.Log("Size too big!");
                         return;
@@ -308,31 +303,32 @@
                 } else if (list.Count > 1) {
                     Debug.Log("Point lies in multiple circles");
                     return;
-                }
-
-                Debug.Log("Create new circle");
-
-                // store owner of vertex
-                m_ownership.Add(me, new DictionaryPair { Ownership = ownership, Radius = 0.5});
-
-                Delaunay.AddVertex(m_delaunay, me);
-
-                // instantiate the relevant game object at click position
-                var prefab = player1Turn ? m_Player1Prefab : m_Player2Prefab;
-                var onClickObject = Instantiate(prefab, pos, Quaternion.identity) as GameObject;
-
-                if (onClickObject == null)
+                } else
                 {
-                    throw new InvalidProgramException("Couldn't instantiate m_PlayerPrefab!");
+                    Debug.Log("Create new circle");
+
+                    // store owner of vertex
+                    m_ownership.Add(me, new DictionaryPair { Ownership = ownership, Radius = 1 });
+
+                    Delaunay.AddVertex(m_delaunay, me);
+
+                    // instantiate the relevant game object at click position
+                    var prefab = player1Turn ? m_Player1Prefab : m_Player2Prefab;
+                    var onClickObject = Instantiate(prefab, pos, Quaternion.identity) as GameObject;
+
+                    if (onClickObject == null)
+                    {
+                        throw new InvalidProgramException("Couldn't instantiate m_PlayerPrefab!");
+                    }
+
+                    gameObjectList.Add(me, onClickObject);
+
+                    // set parent to this game object for better nesting
+                    onClickObject.transform.parent = gameObject.transform;
+
+                    // add object to the fish manager
+                    // m_fishManager.AddFish(onClickObject.transform, player1Turn, m_withLookAtOnPlacement);
                 }
-
-                gameObjectList.Add(me, onClickObject);
-
-                // set parent to this game object for better nesting
-                onClickObject.transform.parent = gameObject.transform;
-
-                // add object to the fish manager
-                // m_fishManager.AddFish(onClickObject.transform, player1Turn, m_withLookAtOnPlacement);
 
                 UpdateVoronoi();
 
