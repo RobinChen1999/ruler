@@ -124,7 +124,7 @@
             // match our transform
             GL.MultMatrix(transform.localToWorldMatrix);
 
-            PowerDiagramDrawer.Draw(m_delaunay);
+            PowerDiagramDrawer.Draw(m_delaunay, m_ownership);
 
             GL.PopMatrix();
         }

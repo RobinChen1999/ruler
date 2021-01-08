@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using UnityEngine;
+    using Util.Geometry;
     using Util.Geometry.Triangulation;
 
     /// <summary>
@@ -110,7 +111,7 @@
         /// Draws the voronoi diagram related to delaunay triangulation
         /// </summary>
         /// <param name="m_Delaunay"></param>
-        private static void DrawVoronoi(Triangulation m_Delaunay)
+        private static void DrawVoronoi(Triangulation m_Delaunay, Dictionary<Vector2, PowerDiagramController.DictionaryPair> m_ownership)
         {
             GL.Begin(GL.LINES);
             GL.Color(Color.black);
@@ -130,9 +131,86 @@
                 if (t1 != null && !t1.Degenerate &&
                     t2 != null && !t2.Degenerate)
                 {
-                    // draw edge between circumcenters
-                    var v1 = t1.Circumcenter.Value;
-                    var v2 = t2.Circumcenter.Value;
+                    float t1RadiusP0 = (float)m_ownership[t1.P0].Radius;
+                    float t1RadiusP1 = (float)m_ownership[t1.P1].Radius;
+                    float t1RadiusP2 = (float)m_ownership[t1.P2].Radius;
+
+                    // Calc power line between P0 and P1 of t1
+                    float t1DistanceP0P1 = (t1.P0 - t1.P1).magnitude;
+                    float t1DistanceP0K1 = (t1DistanceP0P1 + (Mathf.Sqrt(t1RadiusP0) - Mathf.Sqrt(t1RadiusP1)) / t1DistanceP0P1) / 2;
+
+                    Line t1LineP0P1 = new Line(t1.P0, t1.P1);
+                    float t1AngleP0P1 = t1LineP0P1.Angle;
+
+                    float t1AdjacentDistanceP0P1 = Mathf.Abs(Mathf.Cos(t1AngleP0P1) * t1DistanceP0K1);
+                    float t1OppositeDistanceP0P1 = Mathf.Abs(Mathf.Sin(t1AngleP0P1) * t1DistanceP0K1);
+
+                    t1AdjacentDistanceP0P1 *= t1.P1.x - t1.P0.x > 0 ? 1 : -1;
+                    t1OppositeDistanceP0P1 *= t1.P1.y - t1.P0.y > 0 ? 1 : -1;
+
+                    Vector2 t1K1 = new Vector2(t1.P0.x + t1AdjacentDistanceP0P1, t1.P0.y + t1OppositeDistanceP0P1);
+                    Line t1PowerlineP0P1 = new Line(t1K1, Mathf.PI / 2 + t1AngleP0P1);
+
+                    // Calc power line between P0 and P2 of t1
+                    float t1DistanceP0P2 = (t1.P0 - t1.P2).magnitude;
+                    float t1DistanceP0K2 = (t1DistanceP0P2 + (Mathf.Sqrt(t1RadiusP0) - Mathf.Sqrt(t1RadiusP2)) / t1DistanceP0P2) / 2;
+
+                    Line t1LineP0P2 = new Line(t1.P0, t1.P2);
+                    float t1AngleP0P2 = t1LineP0P2.Angle;
+
+                    float t1AdjacentDistanceP0P2 = Mathf.Abs(Mathf.Cos(t1AngleP0P2) * t1DistanceP0K2);
+                    float t1OppositeDistanceP0P2 = Mathf.Abs(Mathf.Sin(t1AngleP0P2) * t1DistanceP0K2);
+
+                    t1AdjacentDistanceP0P2 *= t1.P2.x - t1.P0.x > 0 ? 1 : -1;
+                    t1OppositeDistanceP0P2 *= t1.P2.y - t1.P0.y > 0 ? 1 : -1;
+
+                    Vector2 t1K2 = new Vector2(t1.P0.x + t1AdjacentDistanceP0P2, t1.P0.y + t1OppositeDistanceP0P2);
+                    Line t1PowerlineP0P2 = new Line(t1K2, Mathf.PI / 2 + t1AngleP0P2);
+
+                    // Calc intersection
+                    Vector2 v1 = (Vector2)Line.Intersect(t1PowerlineP0P1, t1PowerlineP0P2);
+
+
+                    float t2RadiusP0 = (float)m_ownership[t2.P0].Radius;
+                    float t2RadiusP1 = (float)m_ownership[t2.P1].Radius;
+                    float t2RadiusP2 = (float)m_ownership[t2.P2].Radius;
+
+                    // Calc power line between P0 and P1 of t2
+                    float t2DistanceP0P1 = (t2.P0 - t2.P1).magnitude;
+                    float t2DistanceP0K1 = (t2DistanceP0P1 + (Mathf.Sqrt(t2RadiusP0) - Mathf.Sqrt(t2RadiusP1)) / t2DistanceP0P1) / 2;
+
+                    Line t2LineP0P1 = new Line(t2.P0, t2.P1);
+                    float t2AngleP0P1 = t2LineP0P1.Angle;
+
+                    float t2AdjacentDistanceP0P1 = Mathf.Abs(Mathf.Cos(t2AngleP0P1) * t2DistanceP0K1);
+                    float t2OppositeDistanceP0P1 = Mathf.Abs(Mathf.Sin(t2AngleP0P1) * t2DistanceP0K1);
+
+                    t2AdjacentDistanceP0P1 *= t2.P1.x - t2.P0.x > 0 ? 1 : -1;
+                    t2OppositeDistanceP0P1 *= t2.P1.y - t2.P0.y > 0 ? 1 : -1;
+
+                    Vector2 t2K1 = new Vector2(t2.P0.x + t2AdjacentDistanceP0P1, t2.P0.y + t2OppositeDistanceP0P1);
+                    Line t2PowerlineP0P1 = new Line(t2K1, Mathf.PI / 2 + t2AngleP0P1);
+
+                    // Calc power line between P0 and P2 of t2
+                    float t2DistanceP0P2 = (t2.P0 - t2.P2).magnitude;
+                    float t2DistanceP0K2 = (t2DistanceP0P2 + (Mathf.Sqrt(t2RadiusP0) - Mathf.Sqrt(t2RadiusP2)) / t2DistanceP0P2) / 2;
+
+                    Line t2LineP0P2 = new Line(t2.P0, t2.P2);
+                    float t2AngleP0P2 = t2LineP0P2.Angle;
+
+                    float t2AdjacentDistanceP0P2 = Mathf.Abs(Mathf.Cos(t2AngleP0P2) * t2DistanceP0K2);
+                    float t2OppositeDistanceP0P2 = Mathf.Abs(Mathf.Sin(t2AngleP0P2) * t2DistanceP0K2);
+
+                    t2AdjacentDistanceP0P2 *= t2.P2.x - t2.P0.x > 0 ? 1 : -1;
+                    t2OppositeDistanceP0P2 *= t2.P2.y - t2.P0.y > 0 ? 1 : -1;
+
+                    Vector2 t2K2 = new Vector2(t2.P0.x + t2AdjacentDistanceP0P2, t2.P0.y + t2OppositeDistanceP0P2);
+                    Line t2PowerlineP0P2 = new Line(t2K2, Mathf.PI / 2 + t2AngleP0P2);
+
+                    // Calc intersection
+                    Vector2 v2 = (Vector2)Line.Intersect(t2PowerlineP0P1, t2PowerlineP0P2);
+
+                    //draw edge between radical centers
                     GL.Vertex3(v1.x, 0, v1.y);
                     GL.Vertex3(v2.x, 0, v2.y);
                 }
@@ -151,7 +229,7 @@
             // call functions that are set to true
             if (EdgesOn) DrawEdges(m_Delaunay);
             if (CircleOn) DrawCircles(m_Delaunay);
-            if (VoronoiOn) DrawVoronoi(m_Delaunay);
+            if (VoronoiOn) DrawVoronoi(m_Delaunay, m_ownership);
         }
     }
 }
