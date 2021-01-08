@@ -77,6 +77,11 @@
                 }
             }
 
+            Debug.Log("===");
+            foreach(var face in dcel.Faces) {
+                Debug.Log(face);
+            }
+
             return dcel;
         }
     }

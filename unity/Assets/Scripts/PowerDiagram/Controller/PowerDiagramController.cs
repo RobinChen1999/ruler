@@ -46,7 +46,7 @@
         private DCEL m_DCEL;
 
         // Created stuff
-        class DictionaryPair {
+        public class DictionaryPair {
             public EOwnership Ownership;
             public double Radius;
         }
@@ -57,7 +57,7 @@
         // mapping of vertices to ownership enum
         private readonly Dictionary<Vector2, DictionaryPair> m_ownership = new Dictionary<Vector2, DictionaryPair>();
 
-        private enum EOwnership
+        public enum EOwnership
         {
             UNOWNED,
             PLAYER1,
@@ -135,7 +135,9 @@
         private void UpdateVoronoi()
         {
             // create voronoi diagram from delaunay triangulation
-            m_DCEL = Voronoi.Create(m_delaunay);
+            //m_DCEL = Voronoi.Create(m_delaunay);
+            
+            m_DCEL = PowerDiagram.Create(m_delaunay, m_ownership);
 
             UpdateMesh();
             UpdatePlayerAreaOwned();
