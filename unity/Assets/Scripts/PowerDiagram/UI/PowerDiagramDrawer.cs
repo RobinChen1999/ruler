@@ -1,5 +1,6 @@
 ﻿namespace PowerDiagram
 {
+    using System.Collections.Generic;
     using UnityEngine;
     using Util.Geometry.Triangulation;
 
@@ -143,7 +144,7 @@
         /// Main drawing function that calls other auxiliary functions.
         /// </summary>
         /// <param name="m_Delaunay"></param>
-        public static void Draw(Triangulation m_Delaunay)
+        public static void Draw(Triangulation m_Delaunay, Dictionary<Vector2, PowerDiagramController.DictionaryPair> m_ownership)
         {
             m_lineMaterial.SetPass(0);
 
