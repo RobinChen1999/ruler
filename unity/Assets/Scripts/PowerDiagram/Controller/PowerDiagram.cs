@@ -54,8 +54,11 @@
                 Line lineP0P1 = new Line(triangle.P0, triangle.P1);
                 float angleP0P1 = lineP0P1.Angle;
 
-                float adjacentDistanceP0P1 = Mathf.Cos(angleP0P1) * P0distanceToK1;
-                float oppositeDistanceP0P1 = Mathf.Sin(angleP0P1) * P0distanceToK1;
+                float adjacentDistanceP0P1 = Mathf.Abs(Mathf.Cos(angleP0P1) * P0distanceToK1);
+                float oppositeDistanceP0P1 = Mathf.Abs(Mathf.Sin(angleP0P1) * P0distanceToK1);
+
+                adjacentDistanceP0P1 *= triangle.P1.x - triangle.P0.x > 0 ? 1 : -1;
+                oppositeDistanceP0P1 *= triangle.P1.y - triangle.P0.y > 0 ? 1 : -1;
 
                 Vector2 K1 = new Vector2(triangle.P0.x + adjacentDistanceP0P1, triangle.P0.y + oppositeDistanceP0P1);
                 Line P0P1PowerLine = new Line(K1, Mathf.PI / 2 + angleP0P1);
@@ -67,8 +70,11 @@
                 Line lineP0P2 = new Line(triangle.P0, triangle.P2);
                 float angleP0P2 = lineP0P2.Angle;
 
-                float adjacentDistanceP0P2 = Mathf.Cos(angleP0P2) * P0distanceToK2;
-                float oppositeDistanceP0P2 = Mathf.Sin(angleP0P2) * P0distanceToK2;
+                float adjacentDistanceP0P2 = Mathf.Abs(Mathf.Cos(angleP0P2) * P0distanceToK2);
+                float oppositeDistanceP0P2 = Mathf.Abs(Mathf.Sin(angleP0P2) * P0distanceToK2);
+
+                adjacentDistanceP0P2 *= triangle.P2.x - triangle.P0.x > 0 ? 1 : -1;
+                oppositeDistanceP0P2 *= triangle.P2.y - triangle.P0.y > 0 ? 1 : -1;
 
                 Vector2 K2 = new Vector2(triangle.P0.x + adjacentDistanceP0P2, triangle.P0.y + oppositeDistanceP0P2);
                 Line P0P2PowerLine = new Line(K2, Mathf.PI / 2 + angleP0P2);
@@ -85,11 +91,14 @@
                 //Debug.Log("Point 0: " + triangle.P0);
                 //Debug.Log("Point 1: " + triangle.P1);
                 //Debug.Log("Point 2: " + triangle.P2);
+                //Debug.Log("Angle 1: " + angleP0P1);
+                //Debug.Log("Angle 2: " + angleP0P2);
                 //Debug.Log("K1: " + K1);
                 //Debug.Log("K2: " + K2);
                 //Debug.Log("Line 1: " + P0P1PowerLine);
                 //Debug.Log("Line 2: " + P0P2PowerLine);
                 //Debug.Log("Radical center: " + RadicalCenter);
+                //Debug.Log("Voronoi center: " + triangle.Circumcenter.Value);
             }
 
             // remember which edges where visited
@@ -111,11 +120,6 @@
                     edgesVisited.Add(edge);
                     edgesVisited.Add(edge.Twin);
                 }
-            }
-
-            Debug.Log("===");
-            foreach (var face in dcel.Faces) {
-                Debug.Log(face);
             }
 
             return dcel;
