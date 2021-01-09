@@ -26,10 +26,53 @@
         //}
 
         /// <summary>
+        /// Compute radical center of a triangle
+        /// </summary>
+        public static Vector2 ComputeRadicalCenter(Triangle triangle, Dictionary<Vector2, PowerDiagramController.DictionaryPair> verticesRadii)
+        {
+            float radiusP0 = (float)verticesRadii[triangle.P0].Radius;
+            float radiusP1 = (float)verticesRadii[triangle.P1].Radius;
+            float radiusP2 = (float)verticesRadii[triangle.P2].Radius;
+
+            // Calc power line between P0 and P1
+            float distanceP0P1 = (triangle.P0 - triangle.P1).magnitude;
+            float distanceP0K1 = (distanceP0P1 + (Mathf.Sqrt(radiusP0) - Mathf.Sqrt(radiusP1)) / distanceP0P1) / 2;
+
+            Line lineP0P1 = new Line(triangle.P0, triangle.P1);
+            float angleP0P1 = lineP0P1.Angle;
+
+            float adjacentDistanceP0P1 = Mathf.Abs(Mathf.Cos(angleP0P1) * distanceP0K1);
+            float oppositeDistanceP0P1 = Mathf.Abs(Mathf.Sin(angleP0P1) * distanceP0K1);
+
+            adjacentDistanceP0P1 *= triangle.P1.x - triangle.P0.x > 0 ? 1 : -1;
+            oppositeDistanceP0P1 *= triangle.P1.y - triangle.P0.y > 0 ? 1 : -1;
+
+            Vector2 K1 = new Vector2(triangle.P0.x + adjacentDistanceP0P1, triangle.P0.y + oppositeDistanceP0P1);
+            Line powerlineP0P1 = new Line(K1, Mathf.PI / 2 + angleP0P1);
+
+            // Calc power line between P0 and P2
+            float distanceP0P2 = (triangle.P0 - triangle.P2).magnitude;
+            float distanceP0K2 = (distanceP0P2 + (Mathf.Sqrt(radiusP0) - Mathf.Sqrt(radiusP2)) / distanceP0P2) / 2;
+
+            Line lineP0P2 = new Line(triangle.P0, triangle.P2);
+            float angleP0P2 = lineP0P2.Angle;
+
+            float adjacentDistanceP0P2 = Mathf.Abs(Mathf.Cos(angleP0P2) * distanceP0K2);
+            float oppositeDistanceP0P2 = Mathf.Abs(Mathf.Sin(angleP0P2) * distanceP0K2);
+
+            adjacentDistanceP0P2 *= triangle.P2.x - triangle.P0.x > 0 ? 1 : -1;
+            oppositeDistanceP0P2 *= triangle.P2.y - triangle.P0.y > 0 ? 1 : -1;
+
+            Vector2 K2 = new Vector2(triangle.P0.x + adjacentDistanceP0P2, triangle.P0.y + oppositeDistanceP0P2);
+            Line powerlineP0P2 = new Line(K2, Mathf.PI / 2 + angleP0P2);
+
+            // Calc intersection
+            return (Vector2)Line.Intersect(powerlineP0P1, powerlineP0P2);            
+        }
+
+        /// <summary>
         /// Creates a Voronoi DCEL from a triangulation. Triangulation should be Delaunay
         /// </summary>
-        /// <param name="m_Delaunay"></param>
-        /// <returns></returns>
         public static DCEL Create(Triangulation m_Delaunay, Dictionary<Vector2, PowerDiagramController.DictionaryPair> verticesRadii) {
             if (!Delaunay.IsValid(m_Delaunay)) {
                 throw new GeomException("Triangulation should be delaunay for the Voronoi diagram.");
@@ -40,65 +83,12 @@
             // create vertices for each triangles radical center and store them in a dictionary
             Dictionary<Triangle, DCELVertex> vertexMap = new Dictionary<Triangle, DCELVertex>();
             foreach (var triangle in m_Delaunay.Triangles) {
-                // degenerate triangle, just ignore
-                if (!triangle.Circumcenter.HasValue) continue;
-
-                float radiusP0 = (float) verticesRadii[triangle.P0].Radius;
-                float radiusP1 = (float) verticesRadii[triangle.P1].Radius;
-                float radiusP2 = (float) verticesRadii[triangle.P2].Radius;
-
-                // Calc power line between P0 and P1
-                float distanceP0P1 = (triangle.P0 - triangle.P1).magnitude;
-                float distanceP0K1 = (distanceP0P1 + (Mathf.Sqrt(radiusP0) - Mathf.Sqrt(radiusP1)) / distanceP0P1) / 2;
-
-                Line lineP0P1 = new Line(triangle.P0, triangle.P1);
-                float angleP0P1 = lineP0P1.Angle;
-
-                float adjacentDistanceP0P1 = Mathf.Abs(Mathf.Cos(angleP0P1) * distanceP0K1);
-                float oppositeDistanceP0P1 = Mathf.Abs(Mathf.Sin(angleP0P1) * distanceP0K1);
-
-                adjacentDistanceP0P1 *= triangle.P1.x - triangle.P0.x > 0 ? 1 : -1;
-                oppositeDistanceP0P1 *= triangle.P1.y - triangle.P0.y > 0 ? 1 : -1;
-
-                Vector2 K1 = new Vector2(triangle.P0.x + adjacentDistanceP0P1, triangle.P0.y + oppositeDistanceP0P1);
-                Line powerlineP0P1 = new Line(K1, Mathf.PI / 2 + angleP0P1);
-                
-                // Calc power line between P0 and P2
-                float distanceP0P2 = (triangle.P0 - triangle.P2).magnitude;
-                float distanceP0K2 = (distanceP0P2 + (Mathf.Sqrt(radiusP0) - Mathf.Sqrt(radiusP2)) / distanceP0P2) / 2;
-
-                Line lineP0P2 = new Line(triangle.P0, triangle.P2);
-                float angleP0P2 = lineP0P2.Angle;
-
-                float adjacentDistanceP0P2 = Mathf.Abs(Mathf.Cos(angleP0P2) * distanceP0K2);
-                float oppositeDistanceP0P2 = Mathf.Abs(Mathf.Sin(angleP0P2) * distanceP0K2);
-
-                adjacentDistanceP0P2 *= triangle.P2.x - triangle.P0.x > 0 ? 1 : -1;
-                oppositeDistanceP0P2 *= triangle.P2.y - triangle.P0.y > 0 ? 1 : -1;
-
-                Vector2 K2 = new Vector2(triangle.P0.x + adjacentDistanceP0P2, triangle.P0.y + oppositeDistanceP0P2);
-                Line powerlineP0P2 = new Line(K2, Mathf.PI / 2 + angleP0P2);
-
-                // Calc intersection
-                Vector2 RadicalCenter = (Vector2) Line.Intersect(powerlineP0P1, powerlineP0P2);
+                Vector2 radicalCenter = ComputeRadicalCenter(triangle, verticesRadii);
 
                 // Store results
-                var vertex = new DCELVertex(RadicalCenter);
+                var vertex = new DCELVertex(radicalCenter);
                 dcel.AddVertex(vertex);
                 vertexMap.Add(triangle, vertex);
-
-                //Debug.Log("=======");
-                //Debug.Log("Point 0: " + triangle.P0);
-                //Debug.Log("Point 1: " + triangle.P1);
-                //Debug.Log("Point 2: " + triangle.P2);
-                //Debug.Log("Angle 1: " + angleP0P1);
-                //Debug.Log("Angle 2: " + angleP0P2);
-                //Debug.Log("K1: " + K1);
-                //Debug.Log("K2: " + K2);
-                //Debug.Log("Line 1: " + P0P1PowerLine);
-                //Debug.Log("Line 2: " + P0P2PowerLine);
-                //Debug.Log("Radical center: " + RadicalCenter);
-                //Debug.Log("Voronoi center: " + triangle.Circumcenter.Value);
             }
 
             // remember which edges where visited
