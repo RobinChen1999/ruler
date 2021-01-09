@@ -170,7 +170,13 @@ PrefabInstance:
     - target: {fileID: 114000010409515544, guid: c47d8da95602b984d8522e95af19bebb,
         type: 3}
       propertyPath: m_Text
-      value: '[Controls]'
+      value: "Welcome, knights!\r\n\r\nYou must conquer the land by placing your circles
+        in strategic positions. When it's your turn, you can either click anywhere
+        on the screen to place a circle or increase the size of an already placed
+        circle of yours by clicking on that circle. Placing circles in other player's
+        circles is not allowed. The player with the most land under their control
+        wins!\r\n\r\nWhen you press C, E or V you can see the underlying data structures
+        (Circles, Delauny triangulation and Power diagram, respectively)."
       objectReference: {fileID: 0}
     - target: {fileID: 114000011312689676, guid: c47d8da95602b984d8522e95af19bebb,
         type: 3}
