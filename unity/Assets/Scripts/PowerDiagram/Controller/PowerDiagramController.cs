@@ -287,17 +287,33 @@
 
                 // If there exists only one vertex that's applicable
                 if (list.Count == 1) {
+                    // Check if clicked vertex can increase in size
                     if (list[0].Value.Radius < 5) {
-                        Debug.Log("Increase size of vertex");
 
-                        // Increase size
-                        GameObject gameObject = gameObjectList[list[0].Key];
+                        // Go over all vertices
+                        List<Vector2> vertexKeys = new List<Vector2>(m_ownership.Keys);
 
-                        float size = (float) list[0].Value.Radius * 2;
+                        foreach (Vector2 vertex in vertexKeys) {
+                            DictionaryPair vertexDP = m_ownership[vertex];
 
-                        gameObject.transform.localScale = new Vector3(size, 0, size);
+                            // Only vertices of the same player
+                            if (vertexDP.Ownership == list[0].Value.Ownership) {
+                                if (vertexDP.Radius < 5) {
+                                    Debug.Log("Increase size of vertex");
 
-                        m_ownership[list[0].Key] = new DictionaryPair { Ownership = list[0].Value.Ownership, Radius = list[0].Value.Radius * 2 };
+                                    // Increase size
+                                    GameObject gameObject = gameObjectList[vertex];
+
+                                    float size = (float)vertexDP.Radius * 2;
+
+                                    gameObject.transform.localScale = new Vector3(size, 0, size);
+
+                                    m_ownership[vertex] = new DictionaryPair { Ownership = vertexDP.Ownership, Radius = size };
+                                } else {
+                                    Debug.Log("Size too big!");
+                                }
+                            }
+                        }
                     } else {
                         Debug.Log("Size too big!");
                         return;
