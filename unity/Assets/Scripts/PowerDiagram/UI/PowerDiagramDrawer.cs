@@ -150,9 +150,9 @@
             m_lineMaterial.SetPass(0);
 
             // call functions that are set to true
-            /*if (EdgesOn)*/ DrawEdges(m_Delaunay);
-            /*if (CircleOn)*/ DrawCircles(m_Delaunay);
-            /*if (VoronoiOn)*/ DrawVoronoi(m_Delaunay, m_ownership);
+            ///*if (EdgesOn)*/ DrawEdges(m_Delaunay);
+            ///*if (CircleOn)*/ DrawCircles(m_Delaunay);
+            ///*if (VoronoiOn)*/ DrawVoronoi(m_Delaunay, m_ownership);
         }
     }
 }

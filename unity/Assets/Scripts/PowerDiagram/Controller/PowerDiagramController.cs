@@ -251,11 +251,8 @@
         {
             if (m_halfTurnsTaken == 0)
             {
-                // game has just been started
                 m_GUIManager.OnStartClicked();
             }
-
-            // load victory if screen clicked after every player has taken turn
             if (m_halfTurnsTaken >= 2 * m_turns) {
                 if (m_playerArea[0] > m_playerArea[1]) {
                     SceneManager.LoadScene(m_p1Victory);
@@ -263,99 +260,63 @@
                     SceneManager.LoadScene(m_p2Victory);
                 }
             } else {
-                // obtain mouse position vector
                 var pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 pos.y = 0;
                 var me = new Vector2(pos.x, pos.z);
-
                 EOwnership ownership = player1Turn ? EOwnership.PLAYER1 : EOwnership.PLAYER2;
-
-                List<KeyValuePair<Vector2, DictionaryPair>> list = new List<KeyValuePair<Vector2, DictionaryPair>>();
-
-                // check if vertex already in graph to avoid degenerate cases
+                List<Vector2> list = new List<Vector2>();
                 foreach (KeyValuePair<Vector2, DictionaryPair> vertex in m_ownership) {
-                    // Check if selected point lies on existing vertex and see to which team it belongs
-                    // Note: Radius * 0.5 since circle sprite has a radius of 0.5 initially
-                    if (Vector2.Distance(vertex.Key, me) < vertex.Value.Radius * 0.5) {
+                    if (Vector2.Distance(vertex.Key, me) <= vertex.Value.Radius * 0.5) {
                         if (ownership == vertex.Value.Ownership) {
-                            list.Add(vertex);
-                        } else {
-                            return;
+                            list.Add(vertex.Key);
                         }
                     }
                 }
-
-                // If there exists only one vertex that's applicable
-                if (list.Count == 1) {
-                    // Check if clicked vertex can increase in size
-                    if (list[0].Value.Radius < 5) {
-
-                        // Go over all vertices
-                        List<Vector2> vertexKeys = new List<Vector2>(m_ownership.Keys);
-
-                        foreach (Vector2 vertex in vertexKeys) {
-                            DictionaryPair vertexDP = m_ownership[vertex];
-
-                            // Only vertices of the same player
-                            if (vertexDP.Ownership == list[0].Value.Ownership) {
-                                if (vertexDP.Radius < 5) {
-                                    Debug.Log("Increase size of vertex");
-
-                                    // Increase size
-                                    GameObject gameObject = gameObjectList[vertex];
-
-                                    float size = (float)vertexDP.Radius * 2;
-
-                                    gameObject.transform.localScale = new Vector3(size, 0, size);
-
-                                    m_ownership[vertex] = new DictionaryPair { Ownership = vertexDP.Ownership, Radius = size };
-                                } else {
-                                    Debug.Log("Size too big!");
+                int counter = 0;
+                if (list.Count >= 1) {
+                    foreach (Vector2 vertex in list) {
+                        DictionaryPair vertexDP = m_ownership[vertex];
+                        if (vertexDP.Radius < 5) {
+                            bool increase = true;
+                            foreach(var v in m_ownership){
+                                if(!vertex.Equals(v.Key) && (Vector2.Distance(vertex,v.Key)<vertexDP.Radius || Vector2.Distance(vertex,v.Key)<m_ownership[v.Key].Radius * 0.5 )){
+                                    increase = false;
+                                    break;
                                 }
                             }
+                            if(increase){
+                                GameObject gameObject = gameObjectList[vertex];
+                                float size = (float)vertexDP.Radius * 2;
+                                gameObject.transform.localScale = new Vector3(size, 0, size);
+                                m_ownership[vertex] = new DictionaryPair { Ownership = vertexDP.Ownership, Radius = size };                                       
+                                counter++;
+                            }
                         }
-                    } else {
-                        Debug.Log("Size too big!");
-                        return;
                     }
-                } else if (list.Count > 1) {
-                    Debug.Log("Point lies in multiple circles");
-                    return;
-                } else
-                {
-                    Debug.Log("Create new circle");
-
-                    // store owner of vertex
-                    m_ownership.Add(me, new DictionaryPair { Ownership = ownership, Radius = 1 });
-
-                    Delaunay.AddVertex(m_delaunay, me);
-
-                    // instantiate the relevant game object at click position
-                    var prefab = player1Turn ? m_Player1Prefab : m_Player2Prefab;
-                    var onClickObject = Instantiate(prefab, pos, Quaternion.identity) as GameObject;
-
-                    if (onClickObject == null)
-                    {
-                        throw new InvalidProgramException("Couldn't instantiate m_PlayerPrefab!");
+                } else {
+                    bool insert = true;
+                    foreach(var v in m_ownership){
+                        if(Vector2.Distance(me,v.Key)<0.5 || Vector2.Distance(me,v.Key)<m_ownership[v.Key].Radius * 0.5 ){
+                            insert = false;
+                            break;
+                        }
                     }
-
-                    gameObjectList.Add(me, onClickObject);
-
-                    // set parent to this game object for better nesting
-                    onClickObject.transform.parent = gameObject.transform;
-
-                    // add object to the fish manager
-                    // m_fishManager.AddFish(onClickObject.transform, player1Turn, m_withLookAtOnPlacement);
+                    if(insert){
+                        m_ownership.Add(me, new DictionaryPair { Ownership = ownership, Radius = 1 });
+                        Delaunay.AddVertex(m_delaunay, me);
+                        var prefab = player1Turn ? m_Player1Prefab : m_Player2Prefab;
+                        var onClickObject = Instantiate(prefab, pos, Quaternion.identity) as GameObject;
+                        gameObjectList.Add(me, onClickObject);
+                        onClickObject.transform.parent = gameObject.transform;
+                        counter++;
+                    }
                 }
-
-                UpdateVoronoi();
-
-                // update player turn
-                player1Turn = !player1Turn;
+                if(counter>0){
+                    UpdateVoronoi();
+                    player1Turn = !player1Turn;
+                    m_halfTurnsTaken += 1;
+                }
                 m_GUIManager.OnTurnStart(player1Turn);
-
-                //Update turn counter
-                m_halfTurnsTaken += 1;
                 if (m_halfTurnsTaken >= 2 * m_turns)
                 {
                     m_GUIManager.OnLastMove();

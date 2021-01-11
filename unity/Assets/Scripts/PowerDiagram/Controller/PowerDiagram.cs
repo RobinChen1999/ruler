@@ -28,14 +28,14 @@
         
         private static Line getLine(Vector2 v1, Vector2 v2, Dictionary<Vector2, PowerDiagramController.DictionaryPair> verticesRadii){
             double dist = Vector2.Distance(v1,v2);
-            double d = (dist*dist+verticesRadii[v1].Radius*verticesRadii[v1].Radius-verticesRadii[v2].Radius*verticesRadii[v2].Radius)/2/dist;
+            double d = (dist*dist+verticesRadii[v1].Radius*0.5*verticesRadii[v1].Radius*0.5-verticesRadii[v2].Radius*0.5*verticesRadii[v2].Radius*0.5)/2/dist;
             Vector2 v = new Vector2((float)(d*(v1.x-v2.x)/dist),(float)(d*(v1.y-v2.y)/dist));
             Vector2 p1 = new Vector2((float)(v1.x-v.x),(float)(v1.y-v.y));
-            double dif1=Math.Abs(Vector2.Distance(v1,p1)*Vector2.Distance(v1,p1)-verticesRadii[v1].Radius*verticesRadii[v1].Radius
-                -Vector2.Distance(v2,p1)*Vector2.Distance(v2,p1)+verticesRadii[v2].Radius*verticesRadii[v2].Radius);
+            double dif1=Math.Abs(Vector2.Distance(v1,p1)*Vector2.Distance(v1,p1)-verticesRadii[v1].Radius*0.5*verticesRadii[v1].Radius*0.5
+                -Vector2.Distance(v2,p1)*Vector2.Distance(v2,p1)+verticesRadii[v2].Radius*0.5*verticesRadii[v2].Radius*0.5);
             Vector2 p2 = new Vector2((float)(v1.x+v.x),(float)(v1.y+v.y));
-            double dif2=Math.Abs(Vector2.Distance(v1,p2)*Vector2.Distance(v1,p2)-verticesRadii[v1].Radius*verticesRadii[v1].Radius
-                -Vector2.Distance(v2,p2)*Vector2.Distance(v2,p2)+verticesRadii[v2].Radius*verticesRadii[v2].Radius);
+            double dif2=Math.Abs(Vector2.Distance(v1,p2)*Vector2.Distance(v1,p2)-verticesRadii[v1].Radius*0.5*verticesRadii[v1].Radius*0.5
+                -Vector2.Distance(v2,p2)*Vector2.Distance(v2,p2)+verticesRadii[v2].Radius*0.5*verticesRadii[v2].Radius*0.5);
             if(dif1<dif2&&dif1<0.1){
                 //Debug.Log(dif1);
                 return new Line(p1, new Line(v1,v2).Angle+(float)Math.PI/2);
@@ -107,8 +107,27 @@
             foreach (var triangle in m_Delaunay.Triangles) {
                 Line l1 = getLine(triangle.P0,triangle.P1, verticesRadii);
                 Line l2 = getLine(triangle.P0,triangle.P2, verticesRadii);
+                Line l3 = getLine(triangle.P1,triangle.P2, verticesRadii);
                 
-                Vector2 radicalCenter = Line.Intersect(l1,l2).Value; 
+                Vector2 v1=Line.Intersect(l1,l2).Value;
+                Vector2 v2=Line.Intersect(l1,l3).Value;
+                Vector2 v3=Line.Intersect(l2,l3).Value;
+                double s11=Vector2.Distance(v1,triangle.P0)*Vector2.Distance(v1,triangle.P0)-verticesRadii[triangle.P0].Radius*0.5*verticesRadii[triangle.P0].Radius*0.5;
+                double s12=Vector2.Distance(v1,triangle.P1)*Vector2.Distance(v1,triangle.P1)-verticesRadii[triangle.P1].Radius*0.5*verticesRadii[triangle.P1].Radius*0.5;
+                double s13=Vector2.Distance(v1,triangle.P2)*Vector2.Distance(v1,triangle.P2)-verticesRadii[triangle.P2].Radius*0.5*verticesRadii[triangle.P2].Radius*0.5;
+                double s1=Math.Max(Math.Max(s11,s12),s13)-Math.Min(Math.Min(s11,s12),s13);
+                double s21=Vector2.Distance(v2,triangle.P0)*Vector2.Distance(v2,triangle.P0)-verticesRadii[triangle.P0].Radius*0.5*verticesRadii[triangle.P0].Radius*0.5;
+                double s22=Vector2.Distance(v2,triangle.P1)*Vector2.Distance(v2,triangle.P1)-verticesRadii[triangle.P1].Radius*0.5*verticesRadii[triangle.P1].Radius*0.5;
+                double s23=Vector2.Distance(v2,triangle.P2)*Vector2.Distance(v2,triangle.P2)-verticesRadii[triangle.P2].Radius*0.5*verticesRadii[triangle.P2].Radius*0.5;
+                double s2=Math.Max(Math.Max(s21,s22),s23)-Math.Min(Math.Min(s21,s22),s23);
+                double s31=Vector2.Distance(v3,triangle.P0)*Vector2.Distance(v3,triangle.P0)-verticesRadii[triangle.P0].Radius*0.5*verticesRadii[triangle.P0].Radius*0.5;
+                double s32=Vector2.Distance(v3,triangle.P1)*Vector2.Distance(v3,triangle.P1)-verticesRadii[triangle.P1].Radius*0.5*verticesRadii[triangle.P1].Radius*0.5;
+                double s33=Vector2.Distance(v3,triangle.P2)*Vector2.Distance(v3,triangle.P2)-verticesRadii[triangle.P2].Radius*0.5*verticesRadii[triangle.P2].Radius*0.5;
+                double s3=Math.Max(Math.Max(s31,s32),s33)-Math.Min(Math.Min(s31,s32),s33);
+                
+                Vector2 radicalCenter = v1;
+                if(s2<=s1&&s2<=s3)radicalCenter = v2;
+                if(s3<=s1&&s3<=s2)radicalCenter = v3; 
                 //Vector2 radicalCenter = ComputeRadicalCenter(triangle, verticesRadii);
 
                 // Store results
