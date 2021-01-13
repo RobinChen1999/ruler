@@ -28,22 +28,30 @@
         
         private static Line getLine(Vector2 v1, Vector2 v2, Dictionary<Vector2, PowerDiagramController.DictionaryPair> verticesRadii){
             double dist = Vector2.Distance(v1,v2);
-            double d = (dist*dist+verticesRadii[v1].Radius*0.5*verticesRadii[v1].Radius*0.5-verticesRadii[v2].Radius*0.5*verticesRadii[v2].Radius*0.5)/2/dist;
-            Vector2 v = new Vector2((float)(d*(v1.x-v2.x)/dist),(float)(d*(v1.y-v2.y)/dist));
-            Vector2 p1 = new Vector2((float)(v1.x-v.x),(float)(v1.y-v.y));
-            double dif1=Math.Abs(Vector2.Distance(v1,p1)*Vector2.Distance(v1,p1)-verticesRadii[v1].Radius*0.5*verticesRadii[v1].Radius*0.5
-                -Vector2.Distance(v2,p1)*Vector2.Distance(v2,p1)+verticesRadii[v2].Radius*0.5*verticesRadii[v2].Radius*0.5);
-            Vector2 p2 = new Vector2((float)(v1.x+v.x),(float)(v1.y+v.y));
-            double dif2=Math.Abs(Vector2.Distance(v1,p2)*Vector2.Distance(v1,p2)-verticesRadii[v1].Radius*0.5*verticesRadii[v1].Radius*0.5
-                -Vector2.Distance(v2,p2)*Vector2.Distance(v2,p2)+verticesRadii[v2].Radius*0.5*verticesRadii[v2].Radius*0.5);
-            if(dif1<dif2&&dif1<0.1){
+
+            double radiusV1 = verticesRadii[v1].Radius * 0.5;
+            double radiusV2 = verticesRadii[v2].Radius * 0.5;
+
+            double d = (dist * dist + radiusV1 * radiusV1 - radiusV2 * radiusV2) / 2 / dist;
+
+            Vector2 v = new Vector2((float)(d * (v1.x - v2.x) / dist), (float)(d * (v1.y - v2.y) / dist));
+
+            Vector2 p1 = new Vector2((float)(v1.x - v.x), (float)(v1.y - v.y));
+            double dif1 = Math.Abs(Vector2.Distance(v1, p1) * Vector2.Distance(v1, p1) - radiusV1 * radiusV1
+                - Vector2.Distance(v2, p1) * Vector2.Distance(v2, p1) + radiusV2 * radiusV2);
+
+            Vector2 p2 = new Vector2((float)(v1.x + v.x), (float)(v1.y + v.y));
+            double dif2 = Math.Abs(Vector2.Distance(v1, p2) * Vector2.Distance(v1, p2) - radiusV1 * radiusV1
+                - Vector2.Distance(v2, p2) * Vector2.Distance(v2, p2) + radiusV2 * radiusV2);
+
+            if (dif1 < dif2 && dif1 < 0.1) {
                 //Debug.Log(dif1);
-                return new Line(p1, new Line(v1,v2).Angle+(float)Math.PI/2);
-            }
-            else if(dif2<dif1&&dif2<0.1){
+                return new Line(p1, new Line(v1, v2).Angle + (float)Math.PI / 2);
+            } else if (dif2 < dif1 && dif2 < 0.1) {
                 //Debug.Log(dif2);
-                return new Line(p2, new Line(v1,v2).Angle+(float)Math.PI/2);
+                return new Line(p2, new Line(v1, v2).Angle + (float)Math.PI / 2);
             }
+
             return null;
         }
 
