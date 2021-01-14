@@ -611,8 +611,8 @@ MonoBehaviour:
     m_FontSize: 16
     m_FontStyle: 0
     m_BestFit: 1
-    m_MinSize: 1
-    m_MaxSize: 32
+    m_MinSize: 0
+    m_MaxSize: 34
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -627,15 +627,19 @@ MonoBehaviour:
     decomposition of the plane into cells such that within each cell all points are
     closest to the same circle. The distance measure used for this is the power distance,
     i.e. the squared distance from the point to the center of the circle minus the
-    squared radius of the circle (d^2 - r^2). The Delaunay triangulation is the graph
-    that we obtain by taking each circle as a vertex, and connecting two circles if
-    their Power diagram cells touch. If no four points lie on the same circle, this
-    graph is a triangulation. The triangles in the Delaunay triangulation are characterized
-    by the property that the circumcircle of a triangle contains no points in its
-    interior.\r\n\nWe compute the Delaunay triangulation using a randomized incremental
-    construction, and then construct the Power diagram from the Delaunay triangulation
-    by computing the radical centers for each Delaunay triangle.\r Each of these radical
-    centers is a vertex of the Power diagram.\n"
+    squared radius of the circle (d^2 - r^2). \n\nThe dual of a Power diagram is a
+    regular triangulation, however in this game the Delaunay triangulation is used
+    to compute the diagram. The Delaunay triangulation is the graph that we obtain
+    by taking each circle as a vertex, and connecting two circles if their Power diagram
+    cells touch. If no four points lie on the same circle, this graph is a triangulation.
+    The triangles in the Delaunay triangulation are characterized by the property
+    that the circumcircle of a triangle contains no points in its interior.\r We compute
+    the Delaunay triangulation using a randomized incremental construction, and then
+    construct the 'Power diagram' from the Delaunay triangulation by computing the
+    radical centers for each Delaunay triangle.\r Each of these radical centers is
+    a vertex of the 'Power diagram'. \nNote that the resulting 'Power diagram' is
+    not exactly the Power diagram corresponding to the circles, since we use the Delaunay
+    triangulation instead of the regular triangulation.\n"
 --- !u!114 &114000009905423143
 MonoBehaviour:
   m_ObjectHideFlags: 0

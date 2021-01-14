@@ -134,9 +134,7 @@
         /// </summary>
         private void UpdateVoronoi()
         {
-            // create voronoi diagram from delaunay triangulation
-            //m_DCEL = Voronoi.Create(m_delaunay);
-            
+            // create 'power diagram' from delaunay triangulation
             m_DCEL = PowerDiagram.Create(m_delaunay, m_ownership);
 
             UpdateMesh();
