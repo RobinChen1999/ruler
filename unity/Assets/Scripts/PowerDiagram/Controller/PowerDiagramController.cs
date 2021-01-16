@@ -4,12 +4,7 @@
     using System.Collections.Generic;
     using UnityEngine;
     using UnityEngine.SceneManagement;
-    using Util.Algorithms.DCEL;
-    using Util.Algorithms.Polygon;
-    using Util.Algorithms.Triangulation;
-    using Util.Geometry.DCEL;
     using Util.Geometry.Polygon;
-    using Util.Geometry.Triangulation;
 
     /// <summary>
     /// Game controller for the voronoi game.
@@ -37,7 +32,6 @@
 
         private float[] m_playerArea;
 
-        //private FishManager m_fishManager;
         private Polygon2D m_meshRect;
 
         public List<Vector2> corners;

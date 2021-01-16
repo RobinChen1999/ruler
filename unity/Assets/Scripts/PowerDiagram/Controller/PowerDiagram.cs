@@ -2,10 +2,7 @@
     using System;
     using System.Collections.Generic;
     using UnityEngine;
-    using Util.Algorithms.Triangulation;
     using Util.Geometry;
-    using Util.Geometry.DCEL;
-    using Util.Geometry.Triangulation;
     using MIConvexHull;
 
     /// <summary>
@@ -13,20 +10,20 @@
     /// </summary>
     public static class PowerDiagram {
         
-        public static Vector3 get_triangle_normal(Vector3 A, Vector3 B, Vector3 C){
+        public static Vector3 Get_triangle_normal(Vector3 A, Vector3 B, Vector3 C){
             return Vector3.Normalize(Vector3.Cross(A, B) + Vector3.Cross(B, C) + Vector3.Cross(C, A));
         }
         
-        public static Vector2 get_power_circumcenter(Vector3 A, Vector3 B, Vector3 C){
-            Vector3 N = get_triangle_normal(A, B, C);
+        public static Vector2 Get_power_circumcenter(Vector3 A, Vector3 B, Vector3 C){
+            Vector3 N = Get_triangle_normal(A, B, C);
             return new Vector2((float)((-0.5 / N.z) * N.x), (float)((-0.5 / N.z) * N.y));
         }
         
-        public static bool is_ccw_triangle(Vector2 A, Vector2 B, Vector2 C){
+        public static bool Is_ccw_triangle(Vector2 A, Vector2 B, Vector2 C){
             return A.x*B.y+A.y*C.x+B.x*C.y-B.y*C.x-A.y*B.x-A.x*C.y > 0;
         }
         
-        public static void get_power_triangulation(Vector2[] S, double[] R, out int[][] tri_list, out Vector2[] V){
+        public static void Get_power_triangulation(Vector2[] S, double[] R, out int[][] tri_list, out Vector2[] V){
             Vector3[] S_lifted = new Vector3[S.Length];
             for(int i=0;i<S.Length;i++){
                 S_lifted[i] = new Vector3(S[i].x, S[i].y, (float)(S[i].x*S[i].x+S[i].y*S[i].y-R[i]*R[i]));
@@ -37,17 +34,17 @@
                 tri_list[0] = new int[3];
                 V = new Vector2[1];
                 
-                if (is_ccw_triangle(S[0], S[1], S[2])){
+                if (Is_ccw_triangle(S[0], S[1], S[2])){
                     tri_list[0][0]=0;
                     tri_list[0][1]=1;
                     tri_list[0][2]=2;
-                    V[0]=get_power_circumcenter(S_lifted[0],S_lifted[1],S_lifted[2]);
+                    V[0]=Get_power_circumcenter(S_lifted[0],S_lifted[1],S_lifted[2]);
                 }
                 else{
                     tri_list[0][0]=0;
                     tri_list[0][1]=2;
                     tri_list[0][2]=1;
-                    V[0]=get_power_circumcenter(S_lifted[0],S_lifted[2],S_lifted[1]);
+                    V[0]=Get_power_circumcenter(S_lifted[0],S_lifted[2],S_lifted[1]);
                 }
                 return;
             }
@@ -70,7 +67,7 @@
             foreach(var f in convexHull.Result.Faces){
                 if(f.Normal[2] <= 0) {
                     tri_list[counter] = new int[3];
-                    if(is_ccw_triangle(S[f.Vertices[0].ind], S[f.Vertices[1].ind], S[f.Vertices[2].ind])){
+                    if(Is_ccw_triangle(S[f.Vertices[0].ind], S[f.Vertices[1].ind], S[f.Vertices[2].ind])){
                         tri_list[counter][0]=f.Vertices[0].ind;
                         tri_list[counter][1]=f.Vertices[1].ind;
                         tri_list[counter][2]=f.Vertices[2].ind;
@@ -84,7 +81,7 @@
                 }
             }
             for (int i = 0; i < counter; i++){
-                V[i] = get_power_circumcenter(S_lifted[tri_list[i][0]], S_lifted[tri_list[i][1]], S_lifted[tri_list[i][2]]);
+                V[i] = Get_power_circumcenter(S_lifted[tri_list[i][0]], S_lifted[tri_list[i][1]], S_lifted[tri_list[i][2]]);
             }
         }
         
@@ -105,7 +102,7 @@
             }
         }
         
-        public static Dictionary<int, List<Vector2>> get_voronoi_cells(Vector2[] S, Vector2[] V, int[][] tri_list, List<Vector2> corners, double[] R){
+        public static Dictionary<int, List<Vector2>> Get_voronoi_cells(Vector2[] S, Vector2[] V, int[][] tri_list, List<Vector2> corners, double[] R){
             Dictionary<int, Dictionary<int,List<int>>> edge_map = new Dictionary<int, Dictionary<int,List<int>>>();
             for (int i=0;i<tri_list.Length;i++){
                 AddEdge(edge_map, tri_list[i][0], tri_list[i][1], i);
@@ -165,20 +162,20 @@
             
             Dictionary<int, List<PowerCell>> sorted = new Dictionary<int, List<PowerCell>>();
             foreach (var f in voronoi_cell_map){
-                sorted.Add(f.Key, order_segment_list(f.Value));
+                sorted.Add(f.Key, Order_segment_list(f.Value));
             }
             Dictionary<int, List<Vector2>> cut = new Dictionary<int, List<Vector2>>();
             foreach (var f in sorted){
-                cut.Add(f.Key, cutOff(f.Value, corners));
+                cut.Add(f.Key, CutOff(f.Value, corners));
             }
-            addCorner(cut, S, R, new Vector2(corners[0].x,corners[0].y), corners);
-            addCorner(cut, S, R, new Vector2(corners[0].x,corners[1].y), corners);
-            addCorner(cut, S, R, new Vector2(corners[1].x,corners[0].y), corners);
-            addCorner(cut, S, R, new Vector2(corners[1].x,corners[1].y), corners);
+            AddCorner(cut, S, R, new Vector2(corners[0].x,corners[0].y), corners);
+            AddCorner(cut, S, R, new Vector2(corners[0].x,corners[1].y), corners);
+            AddCorner(cut, S, R, new Vector2(corners[1].x,corners[0].y), corners);
+            AddCorner(cut, S, R, new Vector2(corners[1].x,corners[1].y), corners);
             return cut;
         }
         
-        public static void addCorner(Dictionary<int, List<Vector2>> cut, Vector2[] S, double[] R, Vector2 corner, List<Vector2> corners){
+        public static void AddCorner(Dictionary<int, List<Vector2>> cut, Vector2[] S, double[] R, Vector2 corner, List<Vector2> corners){
             double r=0.0001;
             int cell=-1;
             int index=-1;
@@ -188,10 +185,10 @@
                 for(int i=0;i<f.Value.Count;i++){
                     Vector2 v1= f.Value[i];
                     Vector2 v2= f.Value[(i+1)%f.Value.Count]; 
-                    bool b1 = compare(v1.x,v2.x,corners[0].x);
-                    bool b2 = compare(v1.y,v2.y,corners[0].y);
-                    bool b3 = compare(v1.x,v2.x,corners[1].x);
-                    bool b4 = compare(v1.y,v2.y,corners[1].y);
+                    bool b1 = Compare(v1.x,v2.x,corners[0].x);
+                    bool b2 = Compare(v1.y,v2.y,corners[0].y);
+                    bool b3 = Compare(v1.x,v2.x,corners[1].x);
+                    bool b4 = Compare(v1.y,v2.y,corners[1].y);
                     if(min>new LineSegment(v1,v2).DistanceToPoint(corner)+r){
                         cell=f.Key;
                         index=i+1;
@@ -218,16 +215,16 @@
             }
         }
         
-        public static bool compare(double a, double b, double c){
+        public static bool Compare(double a, double b, double c){
             double r=0.0001;
             return (Math.Abs(a-c)<r&&Math.Abs(b-c)>r)||(Math.Abs(a-c)>r&&Math.Abs(b-c)<r);
         }
         
-        public static List<Vector2> cutOff(List<PowerCell> segment_list, List<Vector2> corners){
+        public static List<Vector2> CutOff(List<PowerCell> segment_list, List<Vector2> corners){
             List<Vector2> list = new List<Vector2>();
             foreach(var f in segment_list){
-                Vector2 v1 = getv1(f);
-                Vector2 v2 = getv2(f);
+                Vector2 v1 = Getv1(f);
+                Vector2 v2 = Getv2(f);
                 if(list.Count==0||list[list.Count-1]!=v1){
                     list.Add(v1);
                 }
@@ -267,7 +264,7 @@
             return cut;
         }
         
-        public static List<PowerCell> order_segment_list(List<PowerCell> segment_list){
+        public static List<PowerCell> Order_segment_list(List<PowerCell> segment_list){
             int min = 1000000;
             Dictionary<int, PowerCell> dic = new Dictionary<int, PowerCell>();
             for(int i=0;i<segment_list.Count;i++){
@@ -297,8 +294,8 @@
                 }
                 
                 Vector2[] V;
-                get_power_triangulation(S, R, out tri_list, out V);
-                return get_voronoi_cells(S, V, tri_list, corners, R);
+                Get_power_triangulation(S, R, out tri_list, out V);
+                return Get_voronoi_cells(S, V, tri_list, corners, R);
             }            
             else if(verticesRadii.Count == 2){
                 S = new Vector2[verticesRadii.Count];
@@ -322,12 +319,14 @@
                 double d = (dist*dist+R[0]*R[0]-R[1]*R[1])/2/dist;
                 Vector2 v = S[0]+(S[1]-S[0])*(float)(d/dist);
                 Line l = new Line(v,new Line(S[0],S[1]).Angle+(float)Math.PI/2);
-                
-                List<Vector2> list = new List<Vector2>();
-                list.Add(new Vector2(corners[0].x,corners[0].y));
-                list.Add(new Vector2(corners[0].x,corners[1].y));
-                list.Add(new Vector2(corners[1].x,corners[1].y));
-                list.Add(new Vector2(corners[1].x,corners[0].y));
+
+                List<Vector2> list = new List<Vector2>
+                {
+                    new Vector2(corners[0].x, corners[0].y),
+                    new Vector2(corners[0].x, corners[1].y),
+                    new Vector2(corners[1].x, corners[1].y),
+                    new Vector2(corners[1].x, corners[0].y)
+                };
                 List<Vector2> list1 = new List<Vector2>();
                 List<Vector2> list2 = new List<Vector2>();
                 bool first=true;
@@ -369,21 +368,23 @@
                 tri_list[0][1]=0;
                 tri_list[0][2]=0;
                 Dictionary<int, List<Vector2>> voronoi_cell_map = new Dictionary<int, List<Vector2>>();
-                List<Vector2> list = new List<Vector2>();
-                list.Add(new Vector2(corners[0].x,corners[0].y));
-                list.Add(new Vector2(corners[0].x,corners[1].y));
-                list.Add(new Vector2(corners[1].x,corners[1].y));
-                list.Add(new Vector2(corners[1].x,corners[0].y));
+                List<Vector2> list = new List<Vector2>
+                {
+                    new Vector2(corners[0].x, corners[0].y),
+                    new Vector2(corners[0].x, corners[1].y),
+                    new Vector2(corners[1].x, corners[1].y),
+                    new Vector2(corners[1].x, corners[0].y)
+                };
                 voronoi_cell_map.Add(0,list);
                 
                 return voronoi_cell_map;
             }
         }
         
-        public static Vector2 getv1(PowerCell f){
+        public static Vector2 Getv1(PowerCell f){
             return new Vector2((f.A + (float)f.tmin * f.U).x, (f.A + (float)f.tmin * f.U).y);
         }
-        public static Vector2 getv2(PowerCell f){
+        public static Vector2 Getv2(PowerCell f){
             return new Vector2((f.A + (float)f.tmax * f.U).x, (f.A + (float)f.tmax * f.U).y);
         }
 

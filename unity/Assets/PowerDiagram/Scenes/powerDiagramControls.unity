@@ -624,9 +624,9 @@ MonoBehaviour:
     the screen to place a circle or increase the size of an already placed circle
     of yours by clicking on that circle. You can't place circles or increase the radius
     circles such that the circle overlaps the center of another circle. The player
-    with the most land under their control wins!\r\n\r\nWhen you press C, E or V you
-    can see the underlying data structures (Circles, Delauny triangulation and Power
-    diagram, respectively)."
+    with the most land under their control wins!\r\n\r\nWhen you press E or V you
+    can see the underlying data structures (Regular triangulation and Power diagram,
+    respectively)."
 --- !u!114 &114000009839128242
 MonoBehaviour:
   m_ObjectHideFlags: 0

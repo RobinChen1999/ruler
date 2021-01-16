@@ -2,12 +2,10 @@
 {
     using System.Collections.Generic;
     using UnityEngine;
-    using Util.Geometry;
-    using Util.Geometry.Triangulation;
 
     /// <summary>
     /// Static class responsible for displaying voronoi graph and concepts.
-    /// Draws the Voronoi graph, as well as edges of Delaunay triangulation and circumcircles of delaunay triangles.
+    /// Draws the Voronoi graph, as well as edges of regular triangulation.
     /// </summary>
     public static class PowerDiagramDrawer
     {
@@ -40,9 +38,8 @@
         }
 
         /// <summary>
-        /// Draw edges of the Delaunay triangulation
+        /// Draw edges of the regular triangulation
         /// </summary>
-        /// <param name="m_Delaunay"></param>
         private static void DrawEdges(Vector2[] S, int[][] tri_list)
         {
             GL.Begin(GL.LINES);
@@ -61,9 +58,8 @@
         }
 
         /// <summary>
-        /// Draws the voronoi diagram related to delaunay triangulation
+        /// Draws the power diagram
         /// </summary>
-        /// <param name="m_Delaunay"></param>
         private static void DrawVoronoi(Dictionary<int, List<Vector2>> voronoi_cell_map)
         {
             GL.Begin(GL.LINES);
@@ -82,13 +78,12 @@
         /// <summary>
         /// Main drawing function that calls other auxiliary functions.
         /// </summary>
-        /// <param name="m_Delaunay"></param>
         public static void Draw(Dictionary<int, List<Vector2>> voronoi_cell_map, Vector2[] S, int[][] tri_list)
         {
             m_lineMaterial.SetPass(0);
 
-            /*if (EdgesOn)*/ DrawEdges(S,tri_list);
-            /*if (VoronoiOn)*/ DrawVoronoi(voronoi_cell_map);
+            if (EdgesOn) DrawEdges(S,tri_list);
+            if (VoronoiOn) DrawVoronoi(voronoi_cell_map);
         }
     }
 }
