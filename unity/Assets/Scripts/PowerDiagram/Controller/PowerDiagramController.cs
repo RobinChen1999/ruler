@@ -37,13 +37,14 @@
 
         private float[] m_playerArea;
 
-        private Triangulation m_delaunay;
         //private FishManager m_fishManager;
         private Polygon2D m_meshRect;
 
-        // voronoi dcel
-        // calculated after every turn
-        private DCEL m_DCEL;
+        public List<Vector2> corners;
+        public Dictionary<int, List<Vector2>> voronoi_cell_map;
+        public Vector2[] S;
+        public int[] O;
+        public int[][] tri_list;
 
         // Created stuff
         public class DictionaryPair {
@@ -67,17 +68,6 @@
         // Use this for initialization
         public void Start()
         {
-            // create initial delaunay triangulation (three far-away points)
-            m_delaunay = Delaunay.Create();
-
-            // add auxiliary vertices as unowned
-            foreach (var vertex in m_delaunay.Vertices)
-            {
-                m_ownership.Add(vertex, new DictionaryPair { Ownership = EOwnership.UNOWNED, Radius = 1 });
-            }
-
-            //m_fishManager = new FishManager();
-
             // create polygon of rectangle window for intersection with voronoi
             float z = Vector2.Distance(m_meshFilter.transform.position, Camera.main.transform.position);
             var bottomLeft = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, z));
@@ -89,17 +79,17 @@
                     new Vector2(topRight.x, topRight.z),
                     new Vector2(topRight.x, bottomLeft.z)
                 });
+                
+            corners = new List<Vector2>() {
+                    new Vector2(Math.Min(bottomLeft.x,topRight.x), Math.Min(bottomLeft.z,topRight.z)),
+                    new Vector2(Math.Max(bottomLeft.x,topRight.x), Math.Max(bottomLeft.z,topRight.z))
+                };
 
             PowerDiagramDrawer.CreateLineMaterial();
         }
 
         private void Update()
         {
-            if (Input.GetKeyDown("c"))
-            {
-                PowerDiagramDrawer.CircleOn = !PowerDiagramDrawer.CircleOn;
-            }
-
             if (Input.GetKeyDown("e"))
             {
                 PowerDiagramDrawer.EdgesOn = !PowerDiagramDrawer.EdgesOn;
@@ -124,7 +114,7 @@
             // match our transform
             GL.MultMatrix(transform.localToWorldMatrix);
 
-            PowerDiagramDrawer.Draw(m_delaunay, m_ownership);
+            if(m_ownership.Count>0) PowerDiagramDrawer.Draw(voronoi_cell_map, S, tri_list);
 
             GL.PopMatrix();
         }
@@ -134,11 +124,12 @@
         /// </summary>
         private void UpdateVoronoi()
         {
-            // create 'power diagram' from delaunay triangulation
-            m_DCEL = PowerDiagram.Create(m_delaunay, m_ownership);
+            if(m_ownership.Count>0){
+                voronoi_cell_map = PowerDiagram.Create(m_ownership, corners, out S, out O, out tri_list);
 
-            UpdateMesh();
-            UpdatePlayerAreaOwned();
+                UpdateMesh();
+                UpdatePlayerAreaOwned();
+            }
         }
 
         /// <summary>
@@ -170,31 +161,21 @@
             };
 
             // iterate over vertices and create triangles accordingly
-            foreach (var inputNode in m_delaunay.Vertices)
+            for (int t=0;t<S.Length;t++)
             {
-                // dont draw anything for unowned vertices
-                if (m_ownership[inputNode].Ownership == EOwnership.UNOWNED) continue;
+                var playerIndex = O[t];
 
-                // get ownership of node
-                var playerIndex = m_ownership[inputNode].Ownership == EOwnership.PLAYER1 ? 0 : 1;
-
-                var face = m_DCEL.GetContainingFace(inputNode);
-
-                // cant triangulate outer face
-                if (face.IsOuter) continue;
-
-                // triangulate face polygon
-                var triangulation = Triangulator.Triangulate(face.Polygon.Outside);
+                var face = voronoi_cell_map[t];
 
                 // add triangles to correct list
-                foreach (var triangle in triangulation.Triangles)
+                for (int i=1;i<face.Count-1;i++)
                 {
                     int curCount = vertices.Count;
 
                     // add triangle vertices
-                    vertices.Add(new Vector3(triangle.P0.x, 0, triangle.P0.y));
-                    vertices.Add(new Vector3(triangle.P1.x, 0, triangle.P1.y));
-                    vertices.Add(new Vector3(triangle.P2.x, 0, triangle.P2.y));
+                    vertices.Add(new Vector3(face[0].x, 0, face[0].y));
+                    vertices.Add(new Vector3(face[i].x, 0, face[i].y));
+                    vertices.Add(new Vector3(face[i+1].x, 0, face[i+1].y));
 
                     // add triangle to mesh according to owner
                     triangles[playerIndex].Add(curCount);
@@ -225,21 +206,29 @@
         {
             m_playerArea = new float[2] { 0, 0 };
 
-            foreach (var inputNode in m_delaunay.Vertices)
+            
+            for (int t=0;t<S.Length;t++)
             {
-                // get dcel face containing input node
-                var face = m_DCEL.GetContainingFace(inputNode);
+                var playerIndex = O[t];
 
-                if (m_ownership[inputNode].Ownership != EOwnership.UNOWNED)
-                {
-                    // update player area with face that intersects with window
-                    var playerIndex = m_ownership[inputNode].Ownership == EOwnership.PLAYER1 ? 0 : 1;
-                    m_playerArea[playerIndex] += Intersector.IntersectConvex(m_meshRect, face.Polygon.Outside).Area;
+                var face = voronoi_cell_map[t];
+
+                for (int i=1;i<face.Count-1;i++){
+                    m_playerArea[playerIndex] += (float)AreaOfTriangle(face[0],face[i],face[i+1]);
                 }
             }
 
             // update GUI to reflect new player area owned
             m_GUIManager.SetPlayerAreaOwned(m_playerArea[0], m_playerArea[1]);
+        }
+        
+        public double AreaOfTriangle(Vector2 pt1, Vector2 pt2, Vector2 pt3)
+        {
+            double a = Vector2.Distance(pt1,pt2);
+            double b = Vector2.Distance(pt2,pt3);
+            double c = Vector2.Distance(pt1,pt3);
+            double s = (a + b + c) / 2;
+            return Math.Sqrt(s * (s-a) * (s-b) * (s-c));
         }
 
         /// <summary>
@@ -301,7 +290,6 @@
                     }
                     if(insert){
                         m_ownership.Add(me, new DictionaryPair { Ownership = ownership, Radius = 1 });
-                        Delaunay.AddVertex(m_delaunay, me);
                         var prefab = player1Turn ? m_Player1Prefab : m_Player2Prefab;
                         var onClickObject = Instantiate(prefab, pos, Quaternion.identity) as GameObject;
                         gameObjectList.Add(me, onClickObject);

@@ -12,7 +12,6 @@
     public static class PowerDiagramDrawer
     {
         // toggle variables for displaying circles, edges, and voronoi graph
-        public static bool CircleOn { get; set; }
         public static bool EdgesOn { get; set; }
         public static bool VoronoiOn { get; set; }
 
@@ -44,66 +43,20 @@
         /// Draw edges of the Delaunay triangulation
         /// </summary>
         /// <param name="m_Delaunay"></param>
-        private static void DrawEdges(Triangulation m_Delaunay)
+        private static void DrawEdges(Vector2[] S, int[][] tri_list)
         {
             GL.Begin(GL.LINES);
             GL.Color(Color.green);
-
-            foreach (var halfEdge in m_Delaunay.Edges)
-            {
-                // dont draw edges to outer vertices
-                if (m_Delaunay.ContainsInitialPoint(halfEdge.T))
-                {
-                    continue;
-                }
-
-                // draw edge
-                GL.Vertex3(halfEdge.Point1.x, 0, halfEdge.Point1.y);
-                GL.Vertex3(halfEdge.Point2.x, 0, halfEdge.Point2.y);
+            
+            
+            foreach(var f in tri_list){
+                GL.Vertex3(S[f[0]].x, 0, S[f[0]].y);
+                GL.Vertex3(S[f[1]].x, 0, S[f[1]].y);
+                GL.Vertex3(S[f[1]].x, 0, S[f[1]].y);
+                GL.Vertex3(S[f[2]].x, 0, S[f[2]].y);
+                GL.Vertex3(S[f[2]].x, 0, S[f[2]].y);
+                GL.Vertex3(S[f[0]].x, 0, S[f[0]].y);
             }
-
-            GL.End();
-        }
-
-        /// <summary>
-        /// Draws the circumcircles of the Delaunay triangles
-        /// </summary>
-        /// <param name="m_Delaunay"></param>
-        private static void DrawCircles(Triangulation m_Delaunay)
-        {
-            GL.Begin(GL.LINES);
-            GL.Color(Color.blue);
-
-            //const float extra = (360 / 100);
-
-            foreach (Triangle triangle in m_Delaunay.Triangles)
-            {
-                // dont draw circles for triangles to outer vertices
-                if (m_Delaunay.ContainsInitialPoint(triangle) || triangle.Degenerate)
-                {
-                    continue;
-                }
-
-                var center = triangle.Circumcenter.Value;
-
-                // find circle radius
-                var radius = Vector2.Distance(center, triangle.P0);
-
-                var prevA = 0f;
-                for (var a = 0f; a <= 2 * Mathf.PI; a += 0.05f)
-                {
-                    //the circle.
-                    GL.Vertex3(Mathf.Cos(prevA) * radius + center.x, 0, Mathf.Sin(prevA) * radius + center.y);
-                    GL.Vertex3(Mathf.Cos(a) * radius + center.x, 0, Mathf.Sin(a) * radius + center.y);
-
-                    //midpoint of the circle.
-                    GL.Vertex3(Mathf.Cos(prevA) * 0.1f + center.x, 0, Mathf.Sin(prevA) * 0.1f + center.y);
-                    GL.Vertex3(Mathf.Cos(a) * 0.1f + center.x, 0, Mathf.Sin(a) * 0.1f + center.y);
-
-                    prevA = a;
-                }
-            }
-
             GL.End();
         }
 
@@ -111,33 +64,18 @@
         /// Draws the voronoi diagram related to delaunay triangulation
         /// </summary>
         /// <param name="m_Delaunay"></param>
-        private static void DrawVoronoi(Triangulation m_Delaunay, Dictionary<Vector2, PowerDiagramController.DictionaryPair> m_ownership)
+        private static void DrawVoronoi(Dictionary<int, List<Vector2>> voronoi_cell_map)
         {
             GL.Begin(GL.LINES);
-            GL.Color(Color.black);
+            GL.Color(Color.blue);
 
-            foreach (var halfEdge in m_Delaunay.Edges)
-            {
-                // do not draw edges for outer triangles
-                if (m_Delaunay.ContainsInitialPoint(halfEdge.T))
-                {
-                    continue;
-                }
-
-                // find relevant triangles to triangle edge
-                Triangle t1 = halfEdge.T;
-                Triangle t2 = halfEdge.Twin.T;
-
-                if (t1 != null && !t1.Degenerate &&
-                    t2 != null && !t2.Degenerate)
-                {
-                    //draw edge between radical centers
-                    Vector2 v1 = PowerDiagram.ComputeRadicalCenter(t1, m_ownership);
-                    Vector2 v2 = PowerDiagram.ComputeRadicalCenter(t2, m_ownership);
-                    GL.Vertex3(v1.x, 0, v1.y);
-                    GL.Vertex3(v2.x, 0, v2.y);
+            foreach (var segment_list in voronoi_cell_map.Values){
+                for(int i=0;i<segment_list.Count;i++){
+                    GL.Vertex3(segment_list[i].x, 0, segment_list[i].y);
+                    GL.Vertex3(segment_list[(i+1)%segment_list.Count].x, 0, segment_list[(i+1)%segment_list.Count].y);
                 }
             }
+            
             GL.End();
         }
 
@@ -145,14 +83,12 @@
         /// Main drawing function that calls other auxiliary functions.
         /// </summary>
         /// <param name="m_Delaunay"></param>
-        public static void Draw(Triangulation m_Delaunay, Dictionary<Vector2, PowerDiagramController.DictionaryPair> m_ownership)
+        public static void Draw(Dictionary<int, List<Vector2>> voronoi_cell_map, Vector2[] S, int[][] tri_list)
         {
             m_lineMaterial.SetPass(0);
 
-            // call functions that are set to true
-            if (EdgesOn) DrawEdges(m_Delaunay);
-            if (CircleOn) DrawCircles(m_Delaunay);
-            if (VoronoiOn) DrawVoronoi(m_Delaunay, m_ownership);
+            /*if (EdgesOn)*/ DrawEdges(S,tri_list);
+            /*if (VoronoiOn)*/ DrawVoronoi(voronoi_cell_map);
         }
     }
 }
