@@ -222,18 +222,21 @@
         
         public static List<Vector2> CutOff(List<PowerCell> segment_list, List<Vector2> corners){
             List<Vector2> list = new List<Vector2>();
+            List<bool> inf = new List<bool>();
             foreach(var f in segment_list){
                 Vector2 v1 = Getv1(f);
                 Vector2 v2 = Getv2(f);
                 if(list.Count==0||list[list.Count-1]!=v1){
                     list.Add(v1);
+                    inf.Add(f.i==-1);
                 }
                 if(list.Count==0||list[list.Count-1]!=v2){
                     list.Add(v2);
+                    inf.Add(f.j==-1);
                 }
             }
             List<Vector2> cut = new List<Vector2>();
-            for(int i=0;i<list.Count;i++){
+            for(int i=0;i<list.Count;i++) if(!inf[i]||!inf[(i+1)%list.Count]){
                 Vector2 v1= list[i];
                 Vector2 v2= list[(i+1)%list.Count];
                 if(v1.x>=corners[0].x&&v1.y>=corners[0].y&&v1.x<=corners[1].x&&v1.y<=corners[1].y){
@@ -245,6 +248,18 @@
                 Vector2? b=LineSegment.Intersect(new LineSegment(v1,v2),new LineSegment(new Vector2(corners[0].x,corners[0].y),new Vector2(corners[1].x,corners[0].y)));
                 Vector2? c=LineSegment.Intersect(new LineSegment(v1,v2),new LineSegment(new Vector2(corners[0].x,corners[1].y),new Vector2(corners[1].x,corners[1].y)));
                 Vector2? d=LineSegment.Intersect(new LineSegment(v1,v2),new LineSegment(new Vector2(corners[1].x,corners[0].y),new Vector2(corners[1].x,corners[1].y)));
+                if(inf[(i+1)%list.Count]){
+                    a=LineSegment.Intersect(new LineSegment(new Vector2(corners[0].x,corners[0].y),new Vector2(corners[0].x,corners[1].y)),new Ray2D(v1,v2));
+                    b=LineSegment.Intersect(new LineSegment(new Vector2(corners[0].x,corners[0].y),new Vector2(corners[1].x,corners[0].y)),new Ray2D(v1,v2));
+                    c=LineSegment.Intersect(new LineSegment(new Vector2(corners[0].x,corners[1].y),new Vector2(corners[1].x,corners[1].y)),new Ray2D(v1,v2));
+                    d=LineSegment.Intersect(new LineSegment(new Vector2(corners[1].x,corners[0].y),new Vector2(corners[1].x,corners[1].y)),new Ray2D(v1,v2));
+                }
+                if(inf[i]){
+                    a=LineSegment.Intersect(new LineSegment(new Vector2(corners[0].x,corners[0].y),new Vector2(corners[0].x,corners[1].y)),new Ray2D(v2,v1));
+                    b=LineSegment.Intersect(new LineSegment(new Vector2(corners[0].x,corners[0].y),new Vector2(corners[1].x,corners[0].y)),new Ray2D(v2,v1));
+                    c=LineSegment.Intersect(new LineSegment(new Vector2(corners[0].x,corners[1].y),new Vector2(corners[1].x,corners[1].y)),new Ray2D(v2,v1));
+                    d=LineSegment.Intersect(new LineSegment(new Vector2(corners[1].x,corners[0].y),new Vector2(corners[1].x,corners[1].y)),new Ray2D(v2,v1));
+                }
                 List<Vector2> inter = new List<Vector2>();
                 if(a.HasValue) inter.Add(a.Value);
                 if(b.HasValue) inter.Add(b.Value);
@@ -294,7 +309,23 @@
                 }
                 
                 Vector2[] V;
+                bool done = false;
                 Get_power_triangulation(S, R, out tri_list, out V);
+                while(true){
+                    done=true;
+                    for(i=0;i<tri_list.Length;i++){
+                        if(new Line(S[tri_list[i][0]],S[tri_list[i][1]]).DistanceToPoint(S[tri_list[i][2]])<0.0001){
+                            done=false;
+                            PowerDiagramController.DictionaryPair temp = verticesRadii[S[tri_list[i][2]]];
+                            verticesRadii.Remove(S[tri_list[i][2]]);
+                            S[tri_list[i][2]] = S[tri_list[i][2]] + new Line(S[tri_list[i][0]],S[tri_list[i][1]]).Normal*(float)0.0002;
+                            verticesRadii.Add(S[tri_list[i][2]], temp);
+                            Debug.Log(tri_list[i][2]);
+                        }
+                    }
+                    if(done) break;
+                    Get_power_triangulation(S, R, out tri_list, out V);
+                }
                 return Get_voronoi_cells(S, V, tri_list, corners, R);
             }            
             else if(verticesRadii.Count == 2){

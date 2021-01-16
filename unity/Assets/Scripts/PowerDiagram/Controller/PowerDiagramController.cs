@@ -222,7 +222,8 @@
             double b = Vector2.Distance(pt2,pt3);
             double c = Vector2.Distance(pt1,pt3);
             double s = (a + b + c) / 2;
-            return Math.Sqrt(s * (s-a) * (s-b) * (s-c));
+            if(s * (s-a) * (s-b) * (s-c)<0)Debug.Log(s * (s-a) * (s-b) * (s-c));
+            return Math.Sqrt(Math.Max(0,s * (s-a) * (s-b) * (s-c)));
         }
 
         /// <summary>
