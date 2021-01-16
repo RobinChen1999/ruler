@@ -105,7 +105,7 @@
             }
         }
         
-        public static Dictionary<int, List<Vector2>> get_voronoi_cells(Vector2[] S, Vector2[] V, int[][] tri_list, List<Vector2> corners){
+        public static Dictionary<int, List<Vector2>> get_voronoi_cells(Vector2[] S, Vector2[] V, int[][] tri_list, List<Vector2> corners, double[] R){
             Dictionary<int, Dictionary<int,List<int>>> edge_map = new Dictionary<int, Dictionary<int,List<int>>>();
             for (int i=0;i<tri_list.Length;i++){
                 AddEdge(edge_map, tri_list[i][0], tri_list[i][1], i);
@@ -171,30 +171,45 @@
             foreach (var f in sorted){
                 cut.Add(f.Key, cutOff(f.Value, corners));
             }
-            addCorner(cut, new Vector2(corners[0].x,corners[0].y), corners);
-            addCorner(cut, new Vector2(corners[0].x,corners[1].y), corners);
-            addCorner(cut, new Vector2(corners[1].x,corners[0].y), corners);
-            addCorner(cut, new Vector2(corners[1].x,corners[1].y), corners);
+            addCorner(cut, S, R, new Vector2(corners[0].x,corners[0].y), corners);
+            addCorner(cut, S, R, new Vector2(corners[0].x,corners[1].y), corners);
+            addCorner(cut, S, R, new Vector2(corners[1].x,corners[0].y), corners);
+            addCorner(cut, S, R, new Vector2(corners[1].x,corners[1].y), corners);
             return cut;
         }
         
-        public static void addCorner(Dictionary<int, List<Vector2>> cut, Vector2 corner, List<Vector2> corners){
+        public static void addCorner(Dictionary<int, List<Vector2>> cut, Vector2[] S, double[] R, Vector2 corner, List<Vector2> corners){
+            double r=0.0001;
             int cell=-1;
             int index=-1;
             double min=1000000;
+            double min2=1000000;
             foreach(var f in cut){
                 for(int i=0;i<f.Value.Count;i++){
                     Vector2 v1= f.Value[i];
-                    Vector2 v2= f.Value[(i+1)%f.Value.Count];
+                    Vector2 v2= f.Value[(i+1)%f.Value.Count]; 
                     bool b1 = compare(v1.x,v2.x,corners[0].x);
                     bool b2 = compare(v1.y,v2.y,corners[0].y);
                     bool b3 = compare(v1.x,v2.x,corners[1].x);
                     bool b4 = compare(v1.y,v2.y,corners[1].y);
-                    if(((b1&&b2)||(b1&&b3)||(b1&&b4)||(b2&&b3)||(b2&&b4)||(b3&&b4))&&
-                            min>new LineSegment(v1,v2).DistanceToPoint(corner)){
+                    if(min>new LineSegment(v1,v2).DistanceToPoint(corner)+r){
                         cell=f.Key;
                         index=i+1;
                         min=new LineSegment(v1,v2).DistanceToPoint(corner);
+                        min2=Math.Pow(Vector2.Distance(S[f.Key],corner),2)-R[f.Key]*R[f.Key];
+                    }
+                    else if(min>new LineSegment(v1,v2).DistanceToPoint(corner)-r&&min2>Math.Pow(Vector2.Distance(S[f.Key],corner),2)-R[f.Key]*R[f.Key]+r){
+                        cell=f.Key;
+                        index=i+1;
+                        min=new LineSegment(v1,v2).DistanceToPoint(corner);
+                        min2=Math.Pow(Vector2.Distance(S[f.Key],corner),2)-R[f.Key]*R[f.Key];
+                    }
+                    else if(min>new LineSegment(v1,v2).DistanceToPoint(corner)-r&&min2>Math.Pow(Vector2.Distance(S[f.Key],corner),2)-R[f.Key]*R[f.Key]-r&&
+                            ((b1&&b2)||(b1&&b3)||(b1&&b4)||(b2&&b3)||(b2&&b4)||(b3&&b4))){
+                        cell=f.Key;
+                        index=i+1;
+                        min=new LineSegment(v1,v2).DistanceToPoint(corner);
+                        min2=Math.Pow(Vector2.Distance(S[f.Key],corner),2)-R[f.Key]*R[f.Key];
                     }
                 }
             }
@@ -283,7 +298,7 @@
                 
                 Vector2[] V;
                 get_power_triangulation(S, R, out tri_list, out V);
-                return get_voronoi_cells(S, V, tri_list, corners);
+                return get_voronoi_cells(S, V, tri_list, corners, R);
             }            
             else if(verticesRadii.Count == 2){
                 S = new Vector2[verticesRadii.Count];
@@ -302,12 +317,6 @@
                 tri_list[0][1]=1;
                 tri_list[0][2]=0;
                 
-                //dist=a+b
-                //a2-r2=b2-R2
-                //(a-b)(a+b)=r2-R2
-                //(a-b)dist=r2-R2
-                //2a-dist=(r2-R2)/dist
-                //a=((r2-R2)/dist+dist)/2
                 Dictionary<int, List<Vector2>> voronoi_cell_map = new Dictionary<int, List<Vector2>>();
                 double dist = Vector2.Distance(S[0],S[1]);
                 double d = (dist*dist+R[0]*R[0]-R[1]*R[1])/2/dist;
