@@ -320,7 +320,6 @@
                             verticesRadii.Remove(S[tri_list[i][2]]);
                             S[tri_list[i][2]] = S[tri_list[i][2]] + new Line(S[tri_list[i][0]],S[tri_list[i][1]]).Normal*(float)0.0002;
                             verticesRadii.Add(S[tri_list[i][2]], temp);
-                            Debug.Log(tri_list[i][2]);
                         }
                     }
                     if(done) break;
