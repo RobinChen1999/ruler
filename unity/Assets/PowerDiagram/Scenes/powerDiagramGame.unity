@@ -371,6 +371,9 @@ MonoBehaviour:
   m_p2Victory: redVictory
   m_GUIManager: {fileID: 1373892434396973}
   m_meshFilter: {fileID: 33369199757147218}
+  corners: []
+  S: []
+  O: 
 --- !u!1 &1601537245323426
 GameObject:
   m_ObjectHideFlags: 0
@@ -743,7 +746,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: The blue player can click anywhere to place its first castle
+  m_Text: The blue player can click anywhere to place its first fortress
 --- !u!114 &114132186478509156
 MonoBehaviour:
   m_ObjectHideFlags: 0

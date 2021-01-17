@@ -619,13 +619,13 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Welcome, knights!\r\n\r\nYou must conquer the land by placing your circles
+  m_Text: "Welcome, knights!\r\n\r\nYou must conquer the land by placing your fortresses
     in strategic positions. When it's your turn, you can either click anywhere on
-    the screen to place a circle or increase the size of an already placed circle
-    of yours by clicking on that circle. You can't place circles or increase the radius
-    of circles such that they overlap the center of another circle. The player with
-    the most land under their control wins!\r\n\r\nWhen you press E or V you can see
-    the underlying data structures (Regular triangulation and Power diagram, respectively)."
+    the screen to place a fortress or expand an existing fortress of yours by clicking
+    on it. You can't place fortresses or expand fortresses such that they overlap
+    the center of another fortress. The player with the most land under their control
+    wins!\r\n\r\nWhen you press E or V you can see the underlying data structures
+    (Regular triangulation and Power diagram, respectively)."
 --- !u!114 &114000009839128242
 MonoBehaviour:
   m_ObjectHideFlags: 0

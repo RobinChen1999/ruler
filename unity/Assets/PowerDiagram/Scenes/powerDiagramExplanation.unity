@@ -627,10 +627,12 @@ MonoBehaviour:
     decomposition of the plane into cells such that within each cell all points are
     closest to the same circle. The distance measure used for this is the power distance,
     i.e. the squared distance from the point to the center of the circle minus the
-    squared radius of the circle (d^2 - r^2). \n\nWe transform the 2D points to 3D
-    half-planes, with the third coordinate of each circle calculated with their radius.
-    We then compute the lower convex hull of the half-planes intersections. This lower
-    convex hull can be mapped back to 2D, resulting in the Power diagram. "
+    squared radius of the circle (d^2 - r^2). \n\nWe transform the center of the circles
+    to 3D, with the third coordinate of each circle calculated using their radius.
+    We then compute the convex hull over the lifted points. The lower convex hull
+    of the lifted points can be mapped to 2D, resulting in the 2D power triangulation.
+    After computing and connecting the circumcenter of each triangle of the triangulation
+    to the circumcenters of the triangles adjacent to it, we have the Power diagram. "
 --- !u!114 &114000009905423143
 MonoBehaviour:
   m_ObjectHideFlags: 0

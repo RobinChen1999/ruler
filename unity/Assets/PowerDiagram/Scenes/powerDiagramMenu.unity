@@ -301,7 +301,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Power Diagram
+  m_Text: Fortresses
 --- !u!222 &176392103
 CanvasRenderer:
   m_ObjectHideFlags: 0
