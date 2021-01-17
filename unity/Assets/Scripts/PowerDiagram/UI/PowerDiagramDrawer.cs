@@ -85,7 +85,7 @@
             /*if (EdgesOn)*/ DrawEdges(S,tri_list);
             /*if (VoronoiOn)*/ DrawVoronoi(voronoi_cell_map);
             
-            GL.Begin(GL.LINES);
+            /*GL.Begin(GL.LINES);
                 GL.Color(Color.yellow);
                 foreach (var segment_list in voronoi_cell_map){
                     for(int i=0;i<segment_list.Value.Count;i++){
@@ -93,7 +93,7 @@
                         GL.Vertex3(S[segment_list.Key].x, 0, S[segment_list.Key].y);
                     }
                 }
-                GL.End();
+                GL.End();*/
         }
     }
 }

@@ -247,52 +247,52 @@
                 var me = new Vector2(pos.x, pos.z);
                 EOwnership ownership = player1Turn ? EOwnership.PLAYER1 : EOwnership.PLAYER2;
                 List<Vector2> list = new List<Vector2>();
+                bool change=true;
                 foreach (KeyValuePair<Vector2, DictionaryPair> vertex in m_ownership) {
                     if (Vector2.Distance(vertex.Key, me) <= vertex.Value.Radius * 0.5) {
-                        if (ownership == vertex.Value.Ownership) {
+                        if (ownership == vertex.Value.Ownership && list.Count == 0) {
                             list.Add(vertex.Key);
                         }
-                    }
-                }
-                int counter = 0;
-                if (list.Count >= 1) {
-                    foreach (Vector2 vertex in list) {
-                        DictionaryPair vertexDP = m_ownership[vertex];
-                        if (vertexDP.Radius < 5) {
-                            bool increase = true;
-                            foreach(var v in m_ownership){
-                                if(!vertex.Equals(v.Key) && (Vector2.Distance(vertex,v.Key)<vertexDP.Radius || Vector2.Distance(vertex,v.Key)<m_ownership[v.Key].Radius * 0.5 )){
-                                    increase = false;
-                                    break;
-                                }
-                            }
-                            if(increase){
-                                GameObject gameObject = gameObjectList[vertex];
-                                float size = (float)vertexDP.Radius * 2;
-                                gameObject.transform.localScale = new Vector3(size, 0, size);
-                                m_ownership[vertex] = new DictionaryPair { Ownership = vertexDP.Ownership, Radius = size };                                       
-                                counter++;
-                            }
-                        }
-                    }
-                } else {
-                    bool insert = true;
-                    foreach(var v in m_ownership){
-                        if(Vector2.Distance(me,v.Key)<0.5 || Vector2.Distance(me,v.Key)<m_ownership[v.Key].Radius * 0.5 ){
-                            insert = false;
+                        else{
+                            change = false;
                             break;
                         }
                     }
-                    if(insert){
+                }
+                if (change && list.Count==1) {
+                    Vector2 vertex = list[0];
+                    DictionaryPair vertexDP = m_ownership[vertex];
+                    if (vertexDP.Radius < 5) {
+                        foreach(var v in m_ownership){
+                            if(!vertex.Equals(v.Key) && (Vector2.Distance(vertex,v.Key)<=vertexDP.Radius || Vector2.Distance(vertex,v.Key)<=m_ownership[v.Key].Radius * 0.5)){
+                                change = false;
+                                break;
+                            }
+                        }
+                        if(change){
+                            GameObject gameObject = gameObjectList[vertex];
+                            float size = (float)vertexDP.Radius * 2;
+                            gameObject.transform.localScale = new Vector3(size, 0, size);
+                            m_ownership[vertex] = new DictionaryPair { Ownership = vertexDP.Ownership, Radius = size };
+                        }
+                    }
+                    else change=false;
+                } else if (change) {
+                    foreach(var v in m_ownership){
+                        if(Vector2.Distance(me,v.Key)<=0.5 || Vector2.Distance(me,v.Key)<=m_ownership[v.Key].Radius * 0.5 ){
+                            change = false;
+                            break;
+                        }
+                    }
+                    if(change){
                         m_ownership.Add(me, new DictionaryPair { Ownership = ownership, Radius = 1 });
                         var prefab = player1Turn ? m_Player1Prefab : m_Player2Prefab;
                         var onClickObject = Instantiate(prefab, pos, Quaternion.identity) as GameObject;
                         gameObjectList.Add(me, onClickObject);
                         onClickObject.transform.parent = gameObject.transform;
-                        counter++;
                     }
                 }
-                if(counter>0){
+                if(change){
                     UpdateVoronoi();
                     player1Turn = !player1Turn;
                     m_halfTurnsTaken += 1;
